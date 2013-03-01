@@ -1,0 +1,12 @@
+Ven  1 mar 2013 12:29:29 CET
+À faire: GIT!!!!
+Le cahier des charge a avancé.
+Divers test opencv ont été menés. En particulier la détection de forme en temps-réél. Problèmes de performances.
+
+Ven 22 fév 2013 11:42:19 CET
+   Projet Eyes Motion. Reconnaissance vocale. Reconnaissance de forme.
+   Dans un premier temps : reconnaissance mouvement de personnes.
+   Idée de comptage (personnes qui passent, voitures, etc).
+   À faire : régler git. Cahier des charges à faire. Ordre à trouver pour
+   attaquer les problèmes.
+
