@@ -20,7 +20,7 @@
 #define DEFAULT_BRUSH_COLOR (Scalar(255,0,0))
 #define DEFAULT_BRUSH_SIZE  1.5
 #define DEFAULT_THRESHOLD	15
-#define DEFAULT_READ_FILE	"./default.avi"
+#define DEFAULT_READ_FILE	"./default"
 #define DEFAULT_HIST_DIFF	3
 namespace cv {
 

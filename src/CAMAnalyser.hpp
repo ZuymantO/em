@@ -15,7 +15,6 @@
 #define DEFAULT_BLUR_SIZE (Size(3, 3))
 #define DEFAULT_NDBLUR_SIZE  (Size(1,1))
 #define DEFAULT_THRESHOLD	15
-#define DEFAULT_READ_FILE	"./default.avi"
 #define DEFAULT_HIST_DIFF	3
 #define DEFAULT_MIN_AREA	30
 #define DEFAULT_MAX_AREA	1000
