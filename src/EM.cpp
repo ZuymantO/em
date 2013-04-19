@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
       moveWindow("Background", 0, 500);
 	  cam.brushColor = Scalar(0,255,0);
 	  cam.brushSize = 1;
-	  cam.thresHold = 8.0;
-	  cam.majPrev	= 3;
+	  cam.thresHold = 2.0;	// Plus petit detecte les faible mouvement mais donne trop de contour
+	  cam.majPrev	= 1;
 
 	  // Capture des videos
 	  cam.readFrame();

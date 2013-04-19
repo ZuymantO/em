@@ -9,12 +9,17 @@
 #define FORM_HPP_
 #include <iostream>
 #include "opencv2/core/core.hpp"
-#define DEFAULT_DELAY	50
+#define DEFAULT_FORM_DELAY	50
+#define DEFAULT_FORM_ID		0
+#define DEFAULT_FORM_COLOR	Scalar(255, 0, 0)
+#define DEFAULT_FORM_POS	Point(0,0)
+#define DEFAULT_FORM_NAME	"OBJ "
+
 namespace cv {
 
 class Form {
 public:
-	static int delay;	// Nombre de frame avant de supprimer la form (delay - lastSeen > 0)
+	int delay;	// Nombre de frame avant de supprimer la form (delay - lastSeen > 0)
 	int id;	// Identifiant de l'objet si id <= 0 alors l'objet est hors du champs
 	int lastSeen ;// nombre de frame depuis la derniers localisation
 	int area ;			// Surface occupe par l'objet (usage ulterieur si cvBlob utilise)
@@ -26,19 +31,25 @@ public:
 	Point lastPos;		// Derniere position de l'objet
 	Scalar color;		// Couleur attribue a l'objet
 
+	int dirX, dirY, dirZ;	// Direction suspectee ...
 	Form(int _id, int _delay, bool sa, std::string &nm): id(_id), stillAlive(sa), name(nm), rect(){
-		initDefaultForm();
+		initForm();
 	}
 
 	Form(): id(0), stillAlive(true), name(""), rect(){
 		// TODO Auto-generated constructor stub
-		initDefaultForm();
+		initForm();
 	}
 	virtual ~Form(){};
 
 private:
-	void initDefaultForm(){
-		Form::delay = DEFAULT_DELAY;
+	void initForm(){
+		delay 	= DEFAULT_FORM_DELAY;
+		id	 	= DEFAULT_FORM_ID;
+		color 	= DEFAULT_FORM_COLOR;
+		name 	= DEFAULT_FORM_NAME;
+		position= DEFAULT_FORM_POS;
+
 	}
 };
 

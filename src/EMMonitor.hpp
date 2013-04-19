@@ -13,6 +13,8 @@
 #include "CAMAnalyser.hpp"
 #include "TrackForms.hpp"
 #include "Form.hpp"
+#include "TrackForms.hpp"
+#include <time.h>
 
 #define DEFAULT_TOP_BAR_H 20;
 #define DEFAULT_BOTTOM_BAR_H 40;
@@ -30,6 +32,7 @@ public:
 	Mat*			cadre;
 	Mat*			experimental;
 	string			monitorName;
+	TrackForms		tracker;
 	int framesWidth;
 	int framesHeight;
 	int	barTopHeight;
@@ -37,16 +40,17 @@ public:
 	EMMonitor();
 
 	EMMonitor(Camera* ipcam){
+		/* Init monitor */
 		initMonitor();
-
 		cam = ipcam;
 		cap = &(cam->cap);
 		analyser = new CAMAnalyser(cam);
-		initAnalyser();
 		framesWidth = cam->cap.get(CV_CAP_PROP_FRAME_WIDTH);
 		framesHeight = cam->cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 		cadre		= new Mat(Size(framesWidth, framesHeight + barTopHeight + barBottomHeight) , cam->actualFrame.type());
 		((cam->actualFrame).copyTo(*frame));
+		/* Init Analyser */
+		initAnalyser();
 	};
 
 	virtual ~EMMonitor();
@@ -89,8 +93,9 @@ public:
 		if(&img == NULL) return;
 
 		int i = 1, n = ct.size() ;
-		std::cout << "NB calculé : " << n << endl;
+
 		if(ct.size() == 1) return;
+		std::cout << "NB calculé : " << n << endl;
 		 std::vector<std::vector<cv::Point> >::iterator it;
 		 for(it = ct.begin(); it != ct.end() && i < n; ++it){
 			 if(it->size() > 20){
@@ -104,44 +109,29 @@ public:
 	void captureVideo(){
 
 		while (true){
-			//Mat tmp = cadre->clone();
+			Mat tmp;
 			cam->readFrame();
-			analyser->boundsWithSimpleFilter(*experimental);
-			drawRects(analyser->validContours, *frame);
+			frame->copyTo(tmp);
+			analyser->boundsWithSimpleFilter(*experimental); // experimental => contour dessine nul part
+			drawRects(analyser->validContours, tmp); // Deviendra drawForm(tracker-> ...)
 			usleep(20000);
 
-			drawMatInMat(*cadre, *frame);
+			drawMatInMat(*cadre, tmp);
 			drawFrameInfos();
-			putText(*cadre, getNewString(" ", cam->cap.get(CV_CAP_PROP_FRAME_COUNT)), Point(2, 15), 1, 0.8, Scalar(255,255,255));
+			drawMonitorInfos();
 			showFrame();
 
 			if (waitKey(10) >= 0)
 				break;
-			//cadre->setTo(0);
-			//tmp.copyTo(*cadre);
+
+			cadre->setTo(0);	// re-effacer le cadre;
+			frame->setTo(0);
 			cam->actualFrame.copyTo(*frame);
 			analyser->clean();
 		}
 	};
 
-	void drawMonitorInfos(){
-		if(cadre == NULL) return;
-		string str = monitorName;
-		string fps =  getNewString(" FPS : ", cam->cap.get(CV_CAP_PROP_FPS));
-		string format =  getNewString(getNewString(" ", framesWidth).append("x"), framesHeight);
-		str.append(format).append(fps);
-		putText(*cadre, str.append(getNewString(" ", cam->cap.get(CV_CAP_PROP_FRAME_COUNT))), Point(2, 15), 1, 0.8, Scalar(255,255,255));
-	}
-	void drawFrameInfos(){
-		if(cadre == NULL) return;
-
-		string fps =  getNewString(" FPS : ", cam->cap.get(CV_CAP_PROP_FPS));
-		string format =  getNewString(getNewString(" ", framesWidth).append("x"), framesHeight);
-		monitorName.append(format).append(fps);
-	}
-
 	void showFrame(){
-
 		imshow("Monitor", *frame);
 		imshow("Background", *cadre);
 
@@ -180,6 +170,43 @@ public:
 	  return sstm.str();
 	}
 
+
+	void drawMonitorInfos(){
+		if(cadre == NULL) return;
+		int posY = barTopHeight+framesHeight;
+		time_t t;
+		time(&t);
+
+		stringstream strm;
+		strm << " : On " << ctime(&t) << " " ;
+		string str = monitorName;
+		string fps =  getNewString(" FPS : ", cam->cap.get(CV_CAP_PROP_FPS));
+		string format =  getNewString(getNewString(" ", framesWidth).append("x"), framesHeight);
+		string frCt= getNewString(" ", cam->cap.get(CV_CAP_PROP_FRAME_COUNT));
+		str.append(strm.str().erase(strm.str().length()-2));
+		string snd = format.append(fps);
+		putText(*cadre,str , Point(5, posY+10), FONT_HERSHEY_COMPLEX, 0.420, Scalar(255,255,255));
+		putText(*cadre, snd, Point(2, posY+22), FONT_HERSHEY_PLAIN, 0.80, Scalar(255,255,255));
+		putText(*cadre, frCt, Point(2, posY+34), FONT_HERSHEY_PLAIN, 0.8, Scalar(255,255,255));
+	}
+
+	void drawFrameInfos(){
+		if(cadre == NULL) return;
+
+		string str = "Frame infos   ---- ";
+		string nb =  getNewString(" ----   ", 0);
+		str.append(nb);
+		putText(*cadre, str.append(""), Point(2, barTopHeight/2), 1, 0.8, Scalar(255,255,255));
+
+	}
+	void drawDebugInfos(){
+		if(cadre == NULL) return;
+
+
+		putText(*cadre, "Debug info...", Point(2, framesHeight+5), 1, 0.8, Scalar(255,255,255));
+		putText(*cadre, "Debug info ici...", Point(2, framesHeight+15), 1, 0.8, Scalar(255,255,255));
+	}
+
 private:
 
 	void initMonitor(){
@@ -205,25 +232,23 @@ private:
 
 		if(analyser->areaSeuilMax > (1600*1200)/16 ){	// UXGA et QXGA : Non supporte
 			analyser->areaSeuilMin = 150*150;
-		}
-		else if(analyser->areaSeuilMax > (1400*1050)/16 ){	// SXGA+, UXGA + Non supporte
+		}else if(analyser->areaSeuilMax > (1400*1050)/16 ){	// SXGA+, UXGA + Non supporte
 			analyser->areaSeuilMin = 140*140;
 		}
 		// Affichage d'ecran supportes, les images doivent etre inferieurs a cette taille
-		else if(analyser->areaSeuilMax > (1280*1020)/16 ){	// SXGA maximum supporte
+		else if(analyser->areaSeuilMax > (1280*1020)/8 ){	// SXGA maximum supporte
 			analyser->areaSeuilMin = 120*120;
-		}
-		else if(analyser->areaSeuilMax > (1024*768)/16 ){	// XGA+ + supporte
+		}else if(analyser->areaSeuilMax > (1024*768)/4 ){	// XGA+ + supporte
 			analyser->areaSeuilMin = 100*100;
-		}
-		else if(analyser->areaSeuilMax > (800*600)/4 ){	// SXGA, UXGA + Non supporte
+		}else if(analyser->areaSeuilMax > (800*600)/2 ){	// SXGA, UXGA + Non supporte
 			analyser->areaSeuilMin = 80*80;
-		}
-		else if(analyser->areaSeuilMax > (640*480)/4 ){	// VGA, supporte
+		}else if(analyser->areaSeuilMax > (640*480)/2 ){	// VGA, supporte
 			analyser->areaSeuilMin = 40*40;
-		}
-		else if(analyser->areaSeuilMax > (320*240)/2 ){	// QVGA,  supporte
-			analyser->areaSeuilMin = 20;
+		}else if(analyser->areaSeuilMax > (320*240) ){		// QVGA, supporte
+					analyser->areaSeuilMin = 20;
+		}else{	// Min QVGA supporte
+			analyser->areaSeuilMin = 10;
+			cout << "Configuration minimum " << analyser->areaSeuilMin << "-" << analyser->areaSeuilMax << endl;
 		}
 	}
 };

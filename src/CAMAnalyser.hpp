@@ -126,8 +126,13 @@ public:
 private:
 	void subFrame(Mat &irdst){
 		Mat srcBlur1, srcBlur2;
-		blurFrames(frame, &srcBlur1);
-		blurFrames(&cam->prevFrame, &srcBlur2);
+		blurFrames(frame, &srcBlur1, Size(3,3));
+		blurFrames(&cam->prevFrame, &srcBlur2, Size(3,3));
+		/*// Decouvert par hazard : Permet d'obtenir les contours
+		erode(srcBlur1,srcBlur1, cv::Mat());
+		dilate(srcBlur2,srcBlur2, cv::Mat());
+		*/
+
 		cam->createDiff(&srcBlur1, &srcBlur2, &irdst);
 	}
 
