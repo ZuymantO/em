@@ -1,0 +1,96 @@
+
+=== Blob Tracking pipline in processing mode===
+AVIFile: /Users/JC/Desktop/tests/TownCentreXVIDWEB.m4v
+FGDetector:   FG_0
+BlobDetector: BD_CC
+BlobTracker:  CCMSPF
+BlobTrackPostProc:  Kalman
+BlobCorrection:  PostProcRes
+Blob Trajectory Generator:  YML (./track_save)
+BlobTrackAnalysis:  (null)
+FGdetector(FG_0) module parameters:
+  DebugWnd: 0
+  LC: 128
+  alpha1: 0.1
+  alpha2: 0.005
+  alpha3: 0.1
+  N1c: 15
+  N2c: 25
+  N1cc: 25
+  N2cc: 40
+  SaveName: 0
+  LoadName: 0
+  ObjWithoutHoles: 1
+  Morphology: 1
+BlobDetector(BD_CC) module parameters:
+  DebugWnd: 0
+  Latency: 10
+  HMin: 0.02
+  WMin: 0.01
+  MinDistToBorder: 1.1
+  Clastering: 1
+  ROIScale: 1.5
+  OnlyROI: 1
+BlobTracker(CCMSPF) module parameters:
+  DebugWnd: 0
+  AlphaSize: 0.05
+  Alpha: 0.01
+  IterNum: 10
+  ParticleNum: 200
+  UseVel: 0
+  SizeVar: 0
+  PosVar: 0.2
+TrackGen(YML) module parameters:
+  DebugWnd: 0
+PostProcessing(Kalman) module parameters:
+  DebugWnd: 0
+  ModelNoise: 1e-06
+  DataNoisePos: 1e-06
+  DataNoiseSize: 0.00025
+
+=== Blob Tracking pipline in processing mode===
+AVIFile: /Users/JC/Desktop/tests/TownCentreXVIDWEB.m4v
+FGDetector:   FG_0
+BlobDetector: BD_CC
+BlobTracker:  CCMSPF
+BlobTrackPostProc:  Kalman
+BlobCorrection:  PostProcRes
+Blob Trajectory Generator:  None (none)
+BlobTrackAnalysis:  (null)
+FGdetector(FG_0) module parameters:
+  DebugWnd: 0
+  LC: 128
+  alpha1: 0.1
+  alpha2: 0.005
+  alpha3: 0.1
+  N1c: 15
+  N2c: 25
+  N1cc: 25
+  N2cc: 40
+  SaveName: 0
+  LoadName: 0
+  ObjWithoutHoles: 1
+  Morphology: 1
+BlobDetector(BD_CC) module parameters:
+  DebugWnd: 0
+  Latency: 10
+  HMin: 0.02
+  WMin: 0.01
+  MinDistToBorder: 1.1
+  Clastering: 1
+  ROIScale: 1.5
+  OnlyROI: 1
+BlobTracker(CCMSPF) module parameters:
+  DebugWnd: 0
+  AlphaSize: 0.05
+  Alpha: 0.01
+  IterNum: 10
+  ParticleNum: 200
+  UseVel: 0
+  SizeVar: 0
+  PosVar: 0.2
+PostProcessing(Kalman) module parameters:
+  DebugWnd: 0
+  ModelNoise: 1e-06
+  DataNoisePos: 1e-06
+  DataNoiseSize: 0.00025

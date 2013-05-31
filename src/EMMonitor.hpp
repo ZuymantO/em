@@ -25,9 +25,9 @@ namespace cv {
 class EMMonitor {
 public:
 	CAMAnalyser* 	analyser;
-	Camera*			cam;
-	VideoWriter*	writer;
-	VideoCapture*	cap;
+	Camera*			cam;	// La camera mais pourrait etre une liste de camera partagée
+	VideoWriter*	writer; // la source d'ecriture actuelle
+	VideoCapture*	cap; // la source de traitement actuelle
 	Mat*			frame;
 	Mat*			cadre;
 	Mat*			experimental;
@@ -55,38 +55,9 @@ public:
 
 	virtual ~EMMonitor();
 
-
 	void drawRect(vector<Point> &pts, Mat &img){
-		int i = 1, n = pts.size() ;
-		int maxX = 0;
-		int maxY = 0;
-		int minX = 10000;
-		int minY = 10000;
-		std::vector<cv::Point>::iterator it;
-		Point ctr;
-		int sumX = 0, sumY = 0;
-		for(it = pts.begin(); it != pts.end() && i < n; ++it){
-			sumX += it->x;
-			if(it->x > maxX)
-				maxX = it->x;
-			if(it->x < minX)
-				minX = it->x;
-
-			sumY += it->y;
-			if(it->y > maxY)
-				maxY = it->y;
-			if(it->y < minY)
-				minY = it->y;
-
-		}
-		ctr.x = sumX/n;
-		ctr.y = sumY/n;
-		rectangle(
-		            img,
-		            Point(minX-5, minY-5),
-		            Point(maxX+5, maxY+5),
-		            Scalar(0,200,0)
-		        );
+		pair<Point, Rect> cple = analyser->rectFromPoints(pts);
+		rectangle(img, cple.second ,Scalar(0,200,0));
 	}
 
 	void drawRects(vector<vector<cv::Point> > &ct, Mat &img){
@@ -99,12 +70,63 @@ public:
 		 std::vector<std::vector<cv::Point> >::iterator it;
 		 for(it = ct.begin(); it != ct.end() && i < n; ++it){
 			 if(it->size() > 20){
-				 cout << "\tForme " << i << " : " << it->size() << " points : " << endl;
+				 //cout << "\tForme " << i << " : " << it->size() << " points : " << endl;
 				 drawRect(*it, img);
 			 }
 			 i++;
 		 }
 	}
+
+	void drawRect(Rect &rect, Mat &img){
+		rectangle(img, rect ,Scalar(0,200,0));
+	};
+
+	void drawRects(vector<Rect > &ct, Mat &img){
+		if(&img == NULL) return;
+
+		int i = 1, n = ct.size() ;
+
+		if(ct.size() == 1) return;
+		vector<Rect>::iterator it;
+		for(it = ct.begin(); it != ct.end() && i < n; ++it){
+		 if(it->area() > 1){
+			// cout << "\tForme " << i << " : " << it->size() << " points : " << endl;
+			 drawRect(*it, img);
+		 }
+		 i++;
+		 }
+	};
+
+	void testCaptureVideo(){
+		while (true){
+			Mat tmp;
+			cam->readFrame();
+			frame->copyTo(tmp);
+			analyser->boundsWithSimpleFilter(*experimental); // experimental => contour dessine nul part
+			usleep(20000);
+
+			analyser->retainUniqBounds(); // creates uniq cts
+			drawRects(analyser->uniqContours, *frame);
+			drawMatInMat(*cadre, tmp);
+			tracker.trackedForms.clear();
+			tracker.createFormsAndAdd(analyser->uniqContours);
+			tracker.tracks(tracker.trackedForms);
+			tracker.drawForms(tmp);
+			drawFrameInfos();
+			drawMonitorInfos();
+			//cout << r3 ;
+			showFrame();
+			imshow("TMP ", tmp);
+			tmp.setTo(0);
+			if (waitKey(10) == 'q')
+				break;
+
+			if (waitKey(10) == 'p')
+				sleep(2);
+
+			clear();
+		}
+	};
 
 	void captureVideo(){
 
@@ -113,31 +135,40 @@ public:
 			cam->readFrame();
 			frame->copyTo(tmp);
 			analyser->boundsWithSimpleFilter(*experimental); // experimental => contour dessine nul part
-			drawRects(analyser->validContours, tmp); // Deviendra drawForm(tracker-> ...)
+			//drawRects(analyser->validContours, tmp); // Deviendra drawForm(tracker-> ...)
 			usleep(20000);
 
+			analyser->retainUniqBounds();
+			drawRects(analyser->validContours, tmp);
 			drawMatInMat(*cadre, tmp);
 			drawFrameInfos();
 			drawMonitorInfos();
+			if(DEBUG)
+				drawDebugInfos();
+
 			showFrame();
 
-			if (waitKey(10) >= 0)
+			if (waitKey(10) == 'q')
 				break;
 
-			cadre->setTo(0);	// re-effacer le cadre;
-			frame->setTo(0);
-			cam->actualFrame.copyTo(*frame);
-			analyser->clean();
+			if (waitKey(10) == 'p')
+				sleep(5);
+			clear();
 		}
 	};
 
 	void showFrame(){
 		imshow("Monitor", *frame);
 		imshow("Background", *cadre);
-
 	};
 
 
+	void clear(){
+		cadre->setTo(0);	// re-effacer le cadre;
+		frame->setTo(0);
+		cam->actualFrame.copyTo(*frame);
+		analyser->clean();
+	}
 	/**
 	 * Dessiner une image dans une autre avec addWeighted == usage du channel alpha etc.
 	 */
@@ -202,7 +233,6 @@ public:
 	void drawDebugInfos(){
 		if(cadre == NULL) return;
 
-
 		putText(*cadre, "Debug info...", Point(2, framesHeight+5), 1, 0.8, Scalar(255,255,255));
 		putText(*cadre, "Debug info ici...", Point(2, framesHeight+15), 1, 0.8, Scalar(255,255,255));
 	}
@@ -237,21 +267,33 @@ private:
 		}
 		// Affichage d'ecran supportes, les images doivent etre inferieurs a cette taille
 		else if(analyser->areaSeuilMax > (1280*1020)/8 ){	// SXGA maximum supporte
-			analyser->areaSeuilMin = 120*120;
+			analyser->areaSeuilMin = 128;
 		}else if(analyser->areaSeuilMax > (1024*768)/4 ){	// XGA+ + supporte
-			analyser->areaSeuilMin = 100*100;
+			analyser->areaSeuilMin = 102;
 		}else if(analyser->areaSeuilMax > (800*600)/2 ){	// SXGA, UXGA + Non supporte
-			analyser->areaSeuilMin = 80*80;
+			analyser->areaSeuilMin = 80;
 		}else if(analyser->areaSeuilMax > (640*480)/2 ){	// VGA, supporte
-			analyser->areaSeuilMin = 40*40;
+			analyser->areaSeuilMin = 64;
 		}else if(analyser->areaSeuilMax > (320*240) ){		// QVGA, supporte
-					analyser->areaSeuilMin = 20;
+					analyser->areaSeuilMin = 32;
 		}else{	// Min QVGA supporte
-			analyser->areaSeuilMin = 10;
-			cout << "Configuration minimum " << analyser->areaSeuilMin << "-" << analyser->areaSeuilMax << endl;
+			analyser->areaSeuilMin = 16;
+
+				cout << "Configuration minimum " << framesHeight << analyser->areaSeuilMin << "-" << analyser->areaSeuilMax << endl;
 		}
-	}
+	};
+
+	void generateTracker(){
+
+				analyser->boundsWithSimpleFilter(*experimental); // experimental => contour dessine nul part
+				usleep(20000);
+
+				drawFrameInfos();
+	};
+
 };
+
+
 
 } /* namespace cv */
 #endif /* EMMONITOR_HPP_ */

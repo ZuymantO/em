@@ -8,8 +8,9 @@
 #ifndef FORM_HPP_
 #define FORM_HPP_
 #include <iostream>
+#include <sstream>
 #include "opencv2/core/core.hpp"
-#define DEFAULT_FORM_DELAY	50
+#define DEFAULT_FORM_DELAY	100 // 25 img / s => autorisation a disparaitre au plus 4 secondes
 #define DEFAULT_FORM_ID		0
 #define DEFAULT_FORM_COLOR	Scalar(255, 0, 0)
 #define DEFAULT_FORM_POS	Point(0,0)
@@ -18,6 +19,7 @@
 namespace cv {
 
 class Form {
+
 public:
 	int delay;	// Nombre de frame avant de supprimer la form (delay - lastSeen > 0)
 	int id;	// Identifiant de l'objet si id <= 0 alors l'objet est hors du champs
@@ -34,13 +36,45 @@ public:
 	int dirX, dirY, dirZ;	// Direction suspectee ...
 	Form(int _id, int _delay, bool sa, std::string &nm): id(_id), stillAlive(sa), name(nm), rect(){
 		initForm();
-	}
+	};
 
-	Form(): id(0), stillAlive(true), name(""), rect(){
+	Form(Rect &rct): rect(rct){
+		initForm();
+		this->position = Point((rct.x+rct.width)/2, (rct.y + rct.height)/2);
+	};
+
+	Form(){
 		// TODO Auto-generated constructor stub
 		initForm();
 	}
 	virtual ~Form(){};
+
+	void update(Point &pos){
+		std::ostringstream oss;
+		oss << this->id;
+		this->name = this->name.append(string(oss.str()));
+		this->lastPos = this->position;
+		this->position = pos;
+		this->lastSeen = DEFAULT_FORM_DELAY;
+
+	}
+
+	Point getPosition(){
+		return this->position;
+	}
+
+	void drawForm(Mat &img){
+		rectangle(img, rect, Scalar(0,200,0));
+		putText(img, name, position, 1, 0.8, Scalar(200.,200.,0.));
+	};
+
+	bool isAlive(){
+		if(lastSeen > 0) return true;
+		else stillAlive = false;
+
+		return stillAlive;
+	}
+
 
 private:
 	void initForm(){
@@ -48,7 +82,13 @@ private:
 		id	 	= DEFAULT_FORM_ID;
 		color 	= DEFAULT_FORM_COLOR;
 		name 	= DEFAULT_FORM_NAME;
-		position= DEFAULT_FORM_POS;
+		stillAlive = true;
+		 position= DEFAULT_FORM_POS;
+		lastPos = position;
+		cat = 0;
+		area = rect.area();
+		lastSeen = 0;
+		dirX = dirY = dirZ = 0;
 
 	}
 };
