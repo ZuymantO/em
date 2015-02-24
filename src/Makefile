@@ -8,7 +8,7 @@ LIBS = `pkg-config --libs opencv`
 SRCS = $(shell find . -name "*.cpp")
 OBJS = $(SRCS:%.cpp=%.o)
 EXE=em
-BIN=../
+BIN=..
 all : $(EXE)
 	cp $(EXE) $(BIN)/$(EXE)
 

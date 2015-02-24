@@ -22,34 +22,30 @@ using namespace cv;
 
 int main(int argc, char *argv[])
 {
-	  Camera cam("./default.m4v");
-	  EMMonitor monitor(&cam);
-	  monitor.cam = &cam;
-	  monitor.writer = NULL;
+  string file = "./defailt.m4v";
+  if (argc > 1)
+    file = argv[1];
+  Camera cam(file);
+  EMMonitor monitor(&cam);
+  monitor.cam = &cam;
+  monitor.writer = NULL;
 
-	  namedWindow("[Eyes Motion]", CV_WINDOW_AUTOSIZE);
-	  namedWindow("Background", CV_WINDOW_AUTOSIZE);
-	  namedWindow("Actual Frame", CV_WINDOW_AUTOSIZE);
-      moveWindow("[Eyes Motion]", 50,200);
-      moveWindow("Background", 0, 500);
-	  cam.brushColor = Scalar(0,255,0);
-	  cam.brushSize = 1;
-	  cam.thresHold = 2.0;	// Plus petit detecte les faible mouvement mais donne trop de contour
-	  cam.majPrev	= 1;
+  namedWindow("[Eyes Motion]", CV_WINDOW_AUTOSIZE);
+  namedWindow("Background", CV_WINDOW_AUTOSIZE);
 
-	  // Capture des videos
-	  cam.readFrame();
-      monitor.testCaptureVideo();
-	  return 0;
+  moveWindow("Background", 5, 300);
+  moveWindow("[Eyes Motion]", 5,10);
+  cam.brushColor = Scalar(0,255,0);
+  cam.brushSize = 1;
+  cam.thresHold = 2.0;	// Plus petit detecte les faible mouvement mais donne trop de contour
+  cam.majPrev	= 1;
+
+  // Capture des videos
+  cam.readFrame();
+  monitor.testCaptureVideo();
+  return 0;
 
 }
-
-
-
-
-
-
-
 
 // // Tracking with cvBlob Lib
 //#include "opencv2/video/background_segm.hpp"

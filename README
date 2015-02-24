@@ -1,45 +1,54 @@
-Utilisation
+[Eyes Motion]
 =====
+This project is only for learning computer vision field.
 
 
-Compilation
+How to compile
 ---
 
-Installer la librairy opencv
---
+use make comande
+> make
+
+but first you need to install some package dependecies. Mainly opencv.
+
+Opencv Installation
+---
 
  - Mas OS X / linux
-// /!\ Attention /!\ Sous OS X macport demande en cas de non utilisation prologe de faire un sudo port selfupdate puis sudo port upgrade undated. Cela permet de mettre a jour les depots en local.
-
-(manuellement sur opencv.org -> download -> Opencv for Linux/Mac 
+(manually go to opencv.org -> download -> Opencv for Linux/Mac
 http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.5/opencv-2.4.5.tar.gz/download)
-Dezipper, se deplacer dans le dossier opencv.VERSION
-faire un:
- sudo ./configure ;  make ; make install
 
-Par gestionnaire de package :
-- OS X : installer un gestionnaire telque macport
-puis faire un :
-sudo port install opencv*
+> sudo ./configure ;  make ; make install
 
-- Linux: 
+by a manager package like macport :
+- OS X : install macport
+
+> sudo port install opencv*
+
+- Linux:
 apt-get install opencv*
 
-Installer le package config (pkgconfig ou pkg-config)
-En general preinstallé sous les linux, sous os x faire une installation
-de macport puis faire sudo port install (pkgconfig ou pkg*)
+Need installation of config package (pkgconfig or pkg-config)
+Most of time pkgconfig is initially installed on Linux but OS X need a manual
+installation trought macport or homebrew
+> sudo port install (pkgconfig or pkg*)
 
-Se placer a la racine des sources 
+Open [Eyes Motion].
+> cd em
+> ls
    ./src
    ./default.mp4
    ./Makfile
    ./README
-et faire un make all
-# make all
+   ./papers
+   ./datas
+> make all
 
-Fonctionnement
-=====
+Test the program on default.mp4
+> ./em
 
-Le logiciel prend en entrée une video ou un flux d'image 
-pour annalyser les mouvements des objets movibles.
+on any other file
+
+> ./em <file_path>
+
 
